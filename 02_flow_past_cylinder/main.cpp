@@ -23,9 +23,9 @@ bool objects [Nx][Ny];
 
 const int Nvel = 9 ; // number of possible descrete velocities
 
-const int cx_pos [9] = { 0, 1, 0, -1, 0, 1, -1, -1,  1};
-const int cy_pos [9] = { 0, 0, 1, 0, -1, 1,  1, -1, -1};
-const double weight [9] = {4.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/36, 1.0/36, 1.0/36, 1.0/36};
+const int cx_pos [Nvel] = { 0, 1, 0, -1, 0, 1, -1, -1,  1};
+const int cy_pos [Nvel] = { 0, 0, 1, 0, -1, 1,  1, -1, -1};
+const double weight [Nvel] = {4.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/36, 1.0/36, 1.0/36, 1.0/36};
 
 //initial conditions
 
@@ -195,18 +195,18 @@ int bounce_back()
     for(i=0;i<Nx; i++)
     {
         f[i][0][2]=f_post_col[i][0][4];
-        f[i][0][5]=f_post_col[i][0][8];
-        f[i][0][6]=f_post_col[i][0][7];
+        f[i][0][5]=f_post_col[i][0][7];
+        f[i][0][6]=f_post_col[i][0][8];
     }
 
     //upper wall
     for(i=0;i<Nx; i++)
     {
         f[i][Ny][4]=f_post_col[i][Ny][2];
-        f[i][Ny][8]=f_post_col[i][Ny][5];
-        f[i][Ny][7]=f_post_col[i][Ny][6];
+        f[i][Ny][7]=f_post_col[i][Ny][5];
+        f[i][Ny][8]=f_post_col[i][Ny][6];
     }
-
+    
     //boundary objects
     for (i=0; i<Nx; i++)
     {
