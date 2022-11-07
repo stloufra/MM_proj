@@ -1,10 +1,9 @@
-#include <iostream>
-#include <cmath>
-#include <fstream>
-#include <string>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <iostream>
+#include <fstream>
 
 // -----------------------------------------------------------------------------------------
 // ------------------------ CONSTANTS AND DECLARATION --------------------------------------
@@ -15,46 +14,43 @@ const int Ny = 256 ; //even
 const int Nx1 = Nx +1 ;
 const int Ny1 = Ny +1 ;
 const int L = Ny +1 ;
-const int Nvel = 9 ; // number of possible descrete velocities
-const int plot_every = 20;
+const int Nvel = 9 ; // Q number of possible descrete velocities
+const double rho0 = 1.0;
+const double ux0 = 0.0;
+const double uy0 = 0.0;
+const double uw = 0.1;
+const double Re = 400.0;
 
-const int cx_pos [Nvel] = { 0, 1, 0, -1, 0, 1, -1, -1,  1};
-const int cy_pos [Nvel] = { 0, 0, 1, 0, -1, 1,  1, -1, -1};
-const double weight [Nvel] = {4.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/36, 1.0/36, 1.0/36, 1.0/36};
-
-double rho0 = 1.0;
-double ux0 = 0.0;
-double uy0 = 0.0;
-double uw = 0.1;
-double Re = 400.0;
-int k;
-
-//declaration of arrays of variables
-
-double rho [Nx][Ny]; 
-double ux [Nx][Ny]; 
-double uy [Nx][Ny]; 
+const int cx_pos[Nvel] = { 0, 1, 0, -1, 0, 1, -1, -1,  1};
+const int cy_pos[Nvel] = { 0, 0, 1, 0, -1, 1,  1, -1, -1};
+const double weight[Nvel] ={4.0/9,1.0/9,1.0/9,1.0/9,1.0/9,1.0/36,1.0/36,1.0/36,1.0/36};
 
 //declaration of array of distribution function
 
-double f [Nx] [Ny] [Nvel]; 
-double f_post_col [Nx] [Ny] [Nvel]; 
+double f[Ny1][Nx1][Nvel]; 
+double f_post_col[Ny1][Nx1][Nvel]; 
+
+//declaration of arrays of variables
+
+double rho[Ny1][Nx1]; 
+double ux[Ny1][Nx1]; 
+double uy[Ny1][Nx1]; 
+
+double ux0er[Ny1][Nx1];
+double uy0er[Ny1][Nx1];
+
 double tau;
-int Rvel[Nvel]={0, 3, 4, 1, 2, 7, 8, 5, 6 };
-double ux0r [Nx1][Ny1];
-double uy0r [Nx1][Ny1];
+
+const int plot_every = 1000;
 
 void initialization(void) ;
 double f_equilibrium(double rho_eq, double ux_eq, double uy_eq, int k_eq);
 void collision(void);
 void streaming(void);
-void bounce_back(void);
 void postpro(void);
+void bounce_back(void);
 double Err(void);
-double u0[Nx1][Ny1];
-double v0[Nx1][Ny1];
-void output(int k);
-
+void output(void);
 
 // -----------------------------------------------------------------------------------------
 // ---------------------------------------- MAIN -------------------------------------------
@@ -62,17 +58,16 @@ void output(int k);
 
 int main()
 {
-    int X2, Y2;
+    int k,X2, Y2;
     double err;
     X2=Nx/2; Y2=Ny/2;
-
     k=0;
     err=1.0;
     tau = 3*L*uw/Re +0.5;
 
-    initialization();
+    initialization(); 
 
-    while(err>1.0e-6)
+    while(err>1.0e-3)
     {
         k++;
         collision();
@@ -83,34 +78,35 @@ int main()
         if(k%1000==0)
         {
             err=Err();
-            printf("err=%e ux?center=%e uy_center=%e k=%d\n",err,ux[X2][Y2],uy[X2][Y2], k);
+            printf("err=%e ux_center=%e uy_center=%e rho_center=%e k=%d\n",err,ux[Y2][X2],uy[Y2][X2],rho[Y2][X2], k);
         }
 
         if(k%plot_every==0)
         {
-            output(k);
+            output();
         }
 
     }
+    output();
     return 0;
 }    
 
 void initialization() 
 {
     // initialization with equilibrium method
-    int i, j ,k;
+    int j, i, k;
 
-    for (i=0; i<Nx; i++)
+    for (j=0; j<=Ny; j++)
     {
-        for (j=0; j<Ny; j++)
+        for (i=0; i<=Nx; i++)
         {
-            rho [i][j] = rho0;
-            ux [i][j] = ux0;
-            uy [i][j] = uy0;
+            rho [j][i] = rho0;
+            ux [j][i] = ux0;
+            uy [j][i] = uy0;
 
             for(k=0;k<Nvel;k++)
             {
-                f[i][j][k] = f_equilibrium(rho [i][j], ux[i][j], uy[i][j], k);
+                f[j][i][k] = f_equilibrium(rho [j][i], ux[j][i], uy[j][i], k);
             }
         }
     }    
@@ -132,14 +128,14 @@ void collision()
     double feq;
     
 
-    for (i=0; i<Nx; i++)
+    for (j=0; j<=Ny; j++)
     {
-        for (j=0; j<Ny; j++)
+        for (i=0; i<=Nx; i++)
         {    
              for(k=0;k<Nvel;k++)
             {
-                feq = f_equilibrium(rho [i][j], ux[i][j], uy[i][j], k);
-                f_post_col[i][j][k]= f[i][j][k] - (f[i][j][k]-feq)/tau;                             //collision
+                feq = f_equilibrium(rho [j][i], ux[j][i], uy[j][i], k);
+                f_post_col[j][i][k]= f[j][i][k] - (f[j][i][k]-feq)/tau;                             //collision
             }
         }
     }
@@ -147,19 +143,19 @@ void collision()
 
 void streaming()
 {
-    int i, j, id, jd, k;
-    for (i=0; i<Nx; i++)
+    int j, i, jd, id, k;
+    for (j=0; j<=Ny; j++)
     {
-        for (j=0; j<Ny; j++)
+        for (i=0; i<=Nx; i++)
         {    
              for(k=0;k<Nvel;k++)
             {
-                id = i - cx_pos[k];
                 jd = j - cy_pos[k];
-
-                if(id>=0 && id<=Nx && jd>=0 && jd<=Ny)
+                id = i - cx_pos[k];
+                
+                if(jd>=0 && jd<=Ny && id>=0 && id<=Nx)
                 {
-                    f[i][j][k]=f_post_col[id][jd][k];                                               //streaming
+                    f[j][i][k]=f_post_col[jd][id][k];                                               //streaming
                 }
 
             }
@@ -170,58 +166,79 @@ void streaming()
 void bounce_back()
 {
     int i,j;
-
+    
+    //upper wall
+    for(i=0;i<=Nx; i++)
+    {
+        f[Ny][i][4]=f_post_col[Ny][i][2];
+        f[Ny][i][7]=f_post_col[Ny][i][5]+6*rho[Ny][i]*weight[7]*cx_pos[7]*uw;
+        f[Ny][i][8]=f_post_col[Ny][i][6]+6*rho[Ny][i]*weight[8]*cx_pos[8]*uw;
+     }
+    
     //lower wall
-    for(i=0;i<Nx; i++)
+    for(i=0;i<=Nx;i++)
     {
-        f[i][0][2]=f_post_col[i][0][4];
-        f[i][0][5]=f_post_col[i][0][7];
-        f[i][0][6]=f_post_col[i][0][8];
+        f[0][i][2]=f_post_col[0][i][4];
+        f[0][i][5]=f_post_col[0][i][7];
+        f[0][i][6]=f_post_col[0][i][8];
     }
-
     //left wall
-    for(j=0;j<Ny; j++)
+    for(j=0;j<=Ny;j++)
     {
-        f[0][j][1]=f_post_col[0][j][3];
-        f[0][j][5]=f_post_col[0][j][7];
-        f[0][j][8]=f_post_col[0][j][6];
+        f[j][0][1]=f_post_col[j][0][3];
+        f[j][0][5]=f_post_col[j][0][7];
+        f[j][0][8]=f_post_col[j][0][6];
     }
 
     //right wall
-    for(j=0;j<Ny; j++)
+    // i=Nx: right wall
+    for(j=0;j<=Ny;j++)
     {
-        f[Nx][j][3]=f_post_col[Nx][j][1];
-        f[Nx][j][7]=f_post_col[Nx][j][5];
-        f[Nx][j][6]=f_post_col[Nx][j][8];
+        f[j][Nx][3]=f_post_col[j][Nx][1];
+        f[j][Nx][7]=f_post_col[j][Nx][5];
+        f[j][Nx][6]=f_post_col[j][Nx][8];
     }
-   //upper wall
-    for(i=0;i<Nx; i++)
-    {
-        f[i][Ny][4]=f_post_col[i][Ny][2];
-        f[i][Ny][7]=f_post_col[i][Ny][5]+6*rho[i][Ny]*weight[7]*cx_pos[7]*uw;
-        f[i][Ny][8]=f_post_col[i][Ny][6]+6*rho[i][Ny]*weight[8]*cx_pos[8]*uw;
-    }
-
+   
 }
 void postpro()
 {
     int i, j;
-    for (i=0; i<Nx; i++)
+    for (j=0; j<=Ny; j++)
         {
-            for (j=0; j<Ny; j++)
+            for (i=0; i<=Nx; i++)
             { 
-                rho[i][j] = f[i][j][0] + f[i][j][1] + f[i][j][2] + f[i][j][3] + f[i][j][4] + f[i][j][5] + f[i][j][6] + f[i][j][7] + f[i][j][8];
-                ux[i][j] = (f[i][j][1] + f[i][j][5] + f[i][j][8] - f[i][j][3] - f[i][j][6] - f[i][j][7])/rho[i][j];
-                ux[i][j] = (f[i][j][5] + f[i][j][6] + f[i][j][2] - f[i][j][7] - f[i][j][8] - f[i][j][4])/rho[i][j];
+                rho[j][i]=f[j][i][0]+f[j][i][1]+f[j][i][2]+f[j][i][3]+f[j][i][4]+f[j][i][5]+f[j][i][6]+f[j][i][7]+f[j][i][8];
+                ux[j][i]=(f[j][i][1]+f[j][i][5]+f[j][i][8]-f[j][i][3]-f[j][i][6]-f[j][i][7])/rho[j][i];
+                uy[j][i]=(f[j][i][5]+f[j][i][6]+f[j][i][2]-f[j][i][7]-f[j][i][8]-f[j][i][4])/rho[j][i];
             }
         }
 }
 
-
-
-void output(int s)
+double Err() 
 {
-    int i, j;
+    int j, i;
+    double er1, er2;
+    er1=0.0; er2=0.0;
+
+    for (j=1; j<Ny; j++)
+    {
+        for (i=0; i<Nx; i++)
+        {
+            er1+=sqrt((ux[j][i]-ux0er[j][i])*(ux[j][i]-ux0er[j][i])+(uy[j][i]-uy0er[j][i])*(uy[j][i]-uy0er[j][i]));
+            er2+=sqrt(ux[j][i]*ux[j][i]+uy[j][i]*uy[j][i]);
+            ux0er[j][i]=ux[j][i];
+            uy0er[j][i]=uy[j][i];
+
+           
+            
+        }
+    }
+    return er1/er2;
+}
+
+void output()
+{
+    int i, j, s;
 
     std::string step =std::to_string(s/plot_every);
 
@@ -233,7 +250,7 @@ void output(int s)
         {
             for (j=0; j<Ny; j++)
             {
-                out_file<<i<<", "<<j<<", "<<ux[i][j]<<", "<<uy[i][j]<<", "<<rho[i][j]<<", 1\n";
+                out_file << i <<", "<< j <<", "<<ux[j][i]<<", "<<uy[j][i]<<", "<<rho[j][i]<<", 1\n";
             }
         }
 
@@ -242,22 +259,3 @@ void output(int s)
 
 }
 
-double Err(void) 
-{
-    int i, j;
-    double er1, er2;
-    er1=0; er2=0;
-
-    for (i=1; i<Nx; i++)
-    {
-        for (j=0; j<Ny; j++)
-        {
-            er1=sqrt((ux[i][j]-ux0r[i][j])*(ux[i][j]-ux0r[i][j]) + (uy[i][j]-uy0r[i][j])*(ux[i][j]-uy0r[i][j]));
-            er2=sqrt(ux[i][j]*ux[i][j]+uy[i][j]*uy[i][j]);
-            ux0r[i][j]=ux[i][j];
-            uy0r[i][j]=uy[i][j];
-            
-        }
-    }
-    return er1/er2;
-}
