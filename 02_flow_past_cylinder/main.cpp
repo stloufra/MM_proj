@@ -23,9 +23,9 @@ bool objects [Nx][Ny];
 
 const int Nvel = 9 ; // number of possible descrete velocities
 
-const int cx_pos [Nvel] = { 0, 1, 0, -1, 0, 1, -1, -1,  1};
-const int cy_pos [Nvel] = { 0, 0, 1, 0, -1, 1,  1, -1, -1};
-const double weight [Nvel] = {4.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/36, 1.0/36, 1.0/36, 1.0/36};
+const int cx_pos[Nvel] = { 0, 1, 0, -1, 0, 1, -1, -1,  1};
+const int cy_pos[Nvel] = { 0, 0, 1, 0, -1, 1,  1, -1, -1};
+const double weight[Nvel] = {4.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/9, 1.0/36, 1.0/36, 1.0/36, 1.0/36};
 
 //initial conditions
 
@@ -247,10 +247,10 @@ int postpro()
         {
             for (j=0; j<Ny; j++)
             { 
-                rho[i][j] = f[i][j][0] + f[i][j][1] + f[i][j][2] + f[i][j][3] + f[i][j][4] + f[i][j][5] + f[i][j][6] + f[i][j][7] + f[i][j][8];
-                ux[i][j] = (f[i][j][1] + f[i][j][5] + f[i][j][8] - f[i][j][3] - f[i][j][6] - f[i][j][7])/rho[i][j];
-                ux[i][j] = (f[i][j][5] + f[i][j][6] + f[i][j][2] - f[i][j][7] - f[i][j][8] - f[i][j][4])/rho[i][j];
-
+                rho[j][i] =f[j][i][0]+f[j][i][1]+f[j][i][2]+f[j][i][3]+f[j][i][4]+f[j][i][5]+f[j][i][6]+f[j][i][7]+f[j][i][8];
+                ux[j][i] = (f[j][i][1] + f[j][i][5] + f[j][i][8] - f[j][i][3] - f[j][i][6] - f[j][i][7])/rho[j][i];
+                uy[j][i] = (f[j][i][5] + f[j][i][6] + f[j][i][2] - f[j][i][7] - f[j][i][8] - f[j][i][4])/rho[j][i];
+       
                 //inside cylinder 
 
                 if(objects[i][j])
