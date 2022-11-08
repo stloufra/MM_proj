@@ -34,7 +34,7 @@ const double weight[Nvel] ={4.0/9,1.0/9,1.0/9,1.0/9,1.0/9,1.0/36,1.0/36,1.0/36,1
 //initial conditions
 
 const double rho0 = 1.0;
-const double ux0 = 0.0;
+const double ux0 = 1.0;
 const double uy0 = 0.0;
 
 double const ny = 1.035e-6; //water
@@ -226,6 +226,24 @@ int bounce_back()
             }          
         }
     }
+
+    //left wall
+    for(j=0;j<=Ny;j++)
+    {
+        f[j][0][1]=f_post_col[j][0][3];
+        f[j][0][5]=f_post_col[j][0][7];
+        f[j][0][8]=f_post_col[j][0][6];
+    }
+
+    //right wall
+    // i=Nx: right wall
+    for(j=0;j<=Ny;j++)
+    {
+        f[j][Nx][3]=f_post_col[j][Nx][1];
+        f[j][Nx][7]=f_post_col[j][Nx][5];
+        f[j][Nx][6]=f_post_col[j][Nx][8];
+    }
+    
     //Zou-He boundary condition 
 
     /*for (j=0, j<Ny, j++)
@@ -251,13 +269,6 @@ void postpro()
                 uy[j][i]=(f[j][i][5]+f[j][i][6]+f[j][i][2]-f[j][i][7]-f[j][i][8]-f[j][i][4])/rho[j][i];
 
                 //inside cylinder 
-
-                if(objects[j][i])
-                {
-                    ux[j][i] = 0.0;
-                    uy[j][i] = 0.0;
-                    rho[j][i]= 0.0;
-                }
             }
         }
 }
