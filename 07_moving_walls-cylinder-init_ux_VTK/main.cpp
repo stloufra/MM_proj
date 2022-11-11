@@ -18,7 +18,7 @@ const int Ny1 = Ny +1 ;
 const int L = Ny +1 ;
 const int Nvel = 9 ; // Q number of possible descrete velocities
 const double rho0 = 1.0;
-const double ux0 = 0.1;
+const double ux0 = 0.0;
 const double uy0 = 0.0;
 const double uw = 0.1;
 const double Re = 400.0;
@@ -54,7 +54,7 @@ double uy0er[Ny1][Nx1];
 //help
 
 double tau;
-const int plot_every = 250; //25 for 5000
+const int plot_every = 1000; //25 for 5000
 
 //functions 
 
@@ -65,7 +65,7 @@ void streaming(void);
 void postpro(void);
 void bounce_back(void);
 double Err(void);
-void output(int s);
+void output_VTK_StructPoint(int s);
 
 //help functions
 
@@ -106,11 +106,11 @@ int main()
 
         if(k%plot_every==0)
         {
-            output(k);
+            output_VTK_StructPoint(k);
         }
 
     }
-    output(k);
+    output_VTK_StructPoint(k);
     return 0;
 }    
 
@@ -174,6 +174,76 @@ void bo_bounce_back()
     }
 }
 
+void output_VTK_StructPoint(int s)
+{
+    int i, j;
+
+    double u[Ny1][Nx1];
+    double curl[Ny1][Nx1];
+
+    for (i=0; i<=Nx; i++)
+    {
+        for (j=0; j<=Ny; j++)
+        {
+            u[j][i]=sqrt(ux[j][i]*ux[j][i]+uy[j][i]*uy[j][i]);
+        }
+    }
+
+
+    
+    std::string step =std::to_string(s/plot_every);
+
+    std::ofstream out_file("LBE."+step+".vtk");
+
+    out_file << "# vtk DataFile Version 2.0\n" ;
+    out_file << "LBE two cylinders\n" ;
+    out_file << "ASCII\n";
+    out_file << "DATASET STRUCTURED_POINTS\n" ;
+    out_file << "DIMENSIONS "<<Nx<<" "<<Ny<<" 1\n" ;
+    out_file << "ASPECT_RATIO 1 1 1\n";
+    out_file << "ORIGIN 0 0 0\n";
+    out_file << "POINT_DATA "<<Nx*Ny<<"\n";
+    out_file << "SCALARS "<<"rho "<<"double 1\n";
+    out_file << "LOOKUP_TABLE default\n";
+    for (j=0; j<Ny; j++)
+    {
+        for (i=0; i<Nx; i++)
+        {
+            out_file <<rho[j][i]<<"\n";
+        }
+    }
+    out_file << "SCALARS "<<"objects "<<"double 1\n";
+    out_file << "LOOKUP_TABLE default\n";
+    for (j=0; j<Ny; j++)
+    {
+        for (i=0; i<Nx; i++)
+        {
+            out_file <<objects[j][i]<<"\n";
+        }
+    }
+    out_file << "SCALARS "<<"objects "<<"double 1\n";
+    out_file << "LOOKUP_TABLE default\n";
+    for (j=0; j<Ny; j++)
+    {
+        for (i=0; i<Nx; i++)
+        {
+            out_file <<objects[j][i]<<"\n";
+        }
+    }
+    out_file << "VECTORS "<<"U "<<"double\n";
+        for (j=0; j<Ny; j++)
+    {
+        for (i=0; i<Nx; i++)
+        {
+            out_file <<ux[j][i]<<" "<<uy[j][i]<<" 0\n";
+        }
+    }
+
+
+    out_file.close();
+
+
+}
 
 // -----------------------------------------------------------------------------------------
 // ----------------------------- EVOLUTION FUNCTIONS  --------------------------------------
@@ -335,38 +405,4 @@ double Err()
     return er1/er2;
 }
 
-void output(int s)
-{
-    int i, j;
-
-    double u[Ny1][Nx1];
-    double curl[Ny1][Nx1];
-
-    for (i=0; i<=Nx; i++)
-    {
-        for (j=0; j<=Ny; j++)
-        {
-            u[j][i]=sqrt(ux[j][i]*ux[j][i]+uy[j][i]*uy[j][i]);
-        }
-    }
-
-    
-    std::string step =std::to_string(s/plot_every);
-
-    std::ofstream out_file("LBE.csv."+step);
-
-    out_file << "x coord, y coord, ux, uy, u, rho, obj\n" ;
-    
-    for (i=0; i<Nx; i++)
-        {
-            for (j=0; j<Ny; j++)
-            {
-                out_file << i <<", "<< j <<", "<<ux[j][i]<<", "<<uy[j][i]<<", "<<u[j][i]<<", "<<rho[j][i]<<", "<<objects[j][i]<<", 1\n";
-            }
-        }
-
-    out_file.close();
-
-
-}
 
