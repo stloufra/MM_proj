@@ -222,15 +222,7 @@ void output_VTK_StructPoint(int s)
             out_file <<objects[j][i]<<"\n";
         }
     }
-    out_file << "SCALARS "<<"objects "<<"double 1\n";
-    out_file << "LOOKUP_TABLE default\n";
-    for (j=0; j<Ny; j++)
-    {
-        for (i=0; i<Nx; i++)
-        {
-            out_file <<objects[j][i]<<"\n";
-        }
-    }
+   
     out_file << "VECTORS "<<"U "<<"double\n";
         for (j=0; j<Ny; j++)
     {

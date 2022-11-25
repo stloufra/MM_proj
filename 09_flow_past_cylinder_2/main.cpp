@@ -19,10 +19,11 @@ const int L = Ny +1 ;
 const int Nvel = 9 ; // Q number of possible descrete velocities
 const double rho0 = 1.0;
 const double ux0 = 0.0;
-const double uy0 = 0.0;
-const double uw1 = 0.2;
-const double uw2 = 0.0;
+const double uy0 = 0.001;
+const double uw1 = 0.1;
+const double uw2 = 0.1;
 const double Re = 400.0;
+
 
 //Model parameters
 
@@ -32,10 +33,8 @@ const double weight[Nvel] ={4.0/9,1.0/9,1.0/9,1.0/9,1.0/9,1.0/36,1.0/36,1.0/36,1
 
 //Cylinder
 const double D_cylinder = 14 ;
-const double x_cylinder1 = 100 ;
-const double y_cylinder1 = 50 ;
-//const double x_cylinder2 = 300 ;
-//const double y_cylinder2 = 50 ;
+const double x_cylinder1 = Nx/4 ;
+const double y_cylinder1 = Ny/2 ;
 bool objects [Ny1][Nx1];
 
 //declaration of array of distribution function
@@ -55,7 +54,8 @@ double uy0er[Ny1][Nx1];
 //help
 
 double tau;
-const int plot_every = 10; //25 for 5000
+double nu;
+const int plot_every = 250; //25 for 5000
 
 //functions 
 
@@ -67,6 +67,7 @@ void postpro(void);
 void bounce_back(void);
 double Err(void);
 void output_VTK_StructPoint(int s);
+void inlet_outlet_BC(void);
 
 //help functions
 
@@ -88,15 +89,18 @@ int main()
     k=0;
     err=1.0;
     tau = 3*L*uw1/Re +0.5;
+    
 
     initialization(); 
 
-    while(k<1000)//err>=10e-4)
+    while(err>=10e-4)
     {
         k++;
         collision();
         streaming();
         bounce_back();
+        bo_bounce_back();
+        inlet_outlet_BC();
         postpro();
 
         if(k%1000==0)
@@ -108,9 +112,10 @@ int main()
         if(k%plot_every==0)
         {
             output_VTK_StructPoint(k);
+            std::cout<<k<<"\n";
         }
-
-    }
+        
+    }   
     output_VTK_StructPoint(k);
     return 0;
 }    
@@ -131,10 +136,7 @@ void boundary_objects()
             {
                 objects[j][i]=true;
             }
-            // else if (distance(x_cylinder2,y_cylinder2,i,j) < D_cylinder)
-            // {
-            //     objects[j][i]=true;
-            // }
+            
             else 
             {
                 objects[j][i]=false;
@@ -180,8 +182,7 @@ void output_VTK_StructPoint(int s)
     int i, j;
 
     double u[Ny1][Nx1];
-    double curl[Ny1][Nx1];
-
+  
     for (i=0; i<=Nx; i++)
     {
         for (j=0; j<=Ny; j++)
@@ -222,15 +223,7 @@ void output_VTK_StructPoint(int s)
             out_file <<objects[j][i]<<"\n";
         }
     }
-    out_file << "SCALARS "<<"objects "<<"double 1\n";
-    out_file << "LOOKUP_TABLE default\n";
-    for (j=0; j<Ny; j++)
-    {
-        for (i=0; i<Nx; i++)
-        {
-            out_file <<objects[j][i]<<"\n";
-        }
-    }
+   
     out_file << "VECTORS "<<"U "<<"double\n";
         for (j=0; j<Ny; j++)
     {
@@ -325,7 +318,7 @@ void streaming()
                 {
                     f[j][i][k]=f_post_col[jd][id][k];                                               //streaming
                 }
-
+    
             }
         }
     }
@@ -351,41 +344,7 @@ void bounce_back()
         f[0][i][6]=f_post_col[0][i][8]+6*rho[0][i]*weight[6]*cx_pos[6]*uw2;
     }
 
-    // Zou he condition right
-    for(j=0;j<=Ny;j++)
-    {
-        f[j][Nx][3]=f[j][Nx-1][3];
-        f[j][Nx][7]=f[j][Nx-1][7];
-        f[j][Nx][6]=f[j][Nx-1][6];
-    }
-    // Zou he condition left
-
-    for(j=0;j<=Ny;j++)
-    {
-        f[j][0][1]=f[j][1][1];
-        f[j][0][5]=f[j][1][5];
-        f[j][0][8]=f[j][1][8];
-    }
-
-    // //left wall
-    // for(j=0;j<=Ny;j++)
-    // {
-    //     f[j][0][1]=f_post_col[j][0][3];
-    //     f[j][0][5]=f_post_col[j][0][7];
-    //     f[j][0][8]=f_post_col[j][0][6];
-    // }
-
-    //right wall
-    // i=Nx: right wall
-    // for(j=0;j<=Ny;j++)
-    // {
-    //     f[j][Nx][3]=f_post_col[j][Nx][1];
-    //     f[j][Nx][7]=f_post_col[j][Nx][5];
-    //     f[j][Nx][6]=f_post_col[j][Nx][8];
-    // }
     
-    bo_bounce_back();
-
 }
 void postpro()
 {
@@ -397,9 +356,13 @@ void postpro()
             rho[j][i]=f[j][i][0]+f[j][i][1]+f[j][i][2]+f[j][i][3]+f[j][i][4]+f[j][i][5]+f[j][i][6]+f[j][i][7]+f[j][i][8];
             ux[j][i]=(f[j][i][1]+f[j][i][5]+f[j][i][8]-f[j][i][3]-f[j][i][6]-f[j][i][7])/rho[j][i];
             uy[j][i]=(f[j][i][5]+f[j][i][6]+f[j][i][2]-f[j][i][7]-f[j][i][8]-f[j][i][4])/rho[j][i];      
+
         }
 
     }
+
+   
+
 }
 
 double Err() 
@@ -424,3 +387,17 @@ double Err()
 }
 
 
+void inlet_outlet_BC(void)
+{
+    int j;
+    for (j=0; j<=Ny; j++)
+    {
+        f[j][0][1]=f[j][Nx][1];
+        f[j][0][5]=f[j][Nx][5];
+        f[j][0][8]=f[j][Nx][8];
+
+        f[j][Nx][6]=f[j][0][6];
+        f[j][Nx][7]=f[j][0][7];
+        f[j][Nx][3]=f[j][0][3];
+    }
+}
