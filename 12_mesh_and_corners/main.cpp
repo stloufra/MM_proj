@@ -22,7 +22,7 @@ const double Re = 400;
 const double ny = 1;
 
 //Cylinder
-bool cylinder_existence =0;
+bool cylinder_existence =1;
 const double D_cylinder = 12 ;
 const double x_cylinder1 = Nx/4 ;
 const double y_cylinder1 = Ny/2 ;
