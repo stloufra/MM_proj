@@ -1,4 +1,0 @@
-//er1+=sqrt((ux[j][i]-ux0er[j][i])*(ux[j][i]-ux0er[j][i])+(uy[j][i]-uy0er[j][i])*(ux[j][i]-uy0er[j][i]));
-            //er2+=sqrt(ux[j][i]*ux[j][i]+uy[j][i]*uy[j][i]);
-            //ux0er[j][i]=ux[j][i];
-            //uy0er[j][i]=uy[j][i];

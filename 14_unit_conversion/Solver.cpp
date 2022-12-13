@@ -312,7 +312,7 @@ void Solver::convert_to_lattice(double L_fyz, double U_fyz, double rho_fyz, doub
     // vzdelim fyz a dostanu lattice
     Cl = L_fyz/Nx;
     double Cu = U_fyz/0.1;
-    Ct = Cu/Cl;
+    Ct = Cl/Cu;
     double Crho = rho_fyz;
     Cm = Crho*Cl*Cl*Cl;
 
