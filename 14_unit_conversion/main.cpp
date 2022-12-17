@@ -41,7 +41,7 @@ int main()
 
     //solver
     Solver solver(Ny,Nx,mesh_rectangle);
-    solver.convert_to_lattice(0.2, 1000, 1, 1e-6);
+    solver.convert_to_lattice(0.2, 1, 1000, 1e-6);
     solver.initialization_eq(rho0, ux0, uy0);
     solver.output_VTK(0,plot_every);
 

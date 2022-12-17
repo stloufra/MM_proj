@@ -92,7 +92,7 @@ void Solver::streaming()
                 {
                     jd = j - cy_pos[k];
                     id = i - cx_pos[k];
-                    if(jd>=0 && jd <= Ny && id>=0 && id <= Nx)
+                    if(jd>=0 && jd < Ny && id>=0 && id < Nx)
                     df(j,i,k)=df_post(jd,id,k);                                               //streaming
                     
                 }
@@ -318,7 +318,7 @@ void Solver::convert_to_lattice(double L_fyz, double U_fyz, double rho_fyz, doub
 
     ny = ny_fyz*Ct/Cl/Cl;
 
-    tau = ny/3 + 1/2;
+    tau = std::max(ny/3 + 0.5, 0.511);
 
     assert(tau>0.51 && tau<1);
 

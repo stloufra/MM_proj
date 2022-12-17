@@ -20,7 +20,7 @@ uy0er(Ny_in,Nx_in)
 
 void Solver::initialization_eq(double rho0, double ux0, double uy0,double Re)
 {
-    for(int j=0; j < Ny; j++)
+for(int j=0; j < Ny; j++)
   {
     for(int i=0; i < Nx; i++)
     {
@@ -92,7 +92,7 @@ void Solver::streaming()
                 {
                     jd = j - cy_pos[k];
                     id = i - cx_pos[k];
-                    if(jd>=0 && jd <= Ny && id>=0 && id <= Nx)
+                    if(jd>=0 && jd < Ny && id>=0 && id < Nx)
                     df(j,i,k)=df_post(jd,id,k);                                               //streaming
                     
                 }

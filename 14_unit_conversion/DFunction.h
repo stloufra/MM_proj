@@ -19,18 +19,18 @@ public:
     }
     ~DFunction() {} 
 
-    double &operator () (int i, int j, int v)
+    double &operator () (int y, int x, int v)
     {   
-        assert(i >= 0 && i <= rows_pr && j >= 0 && j <= collums_pr && v <= velocities -1 && v >= 0);
+        assert(y >= 0 && y < rows_pr && x >= 0 && x < collums_pr && v < velocities  && v >= 0);
 
-        return data[i*collums_pr*velocities + j*velocities + v ];
+        return data[y*collums_pr*velocities + x*velocities + v ];
     }
 
-    const double &operator () (int i, int j, int v) const
+    const double &operator () (int y, int x, int v) const
     {   
-         assert(i >= 0 && i <= rows_pr && j >= 0 && j <= collums_pr && v <= velocities -1 && v >= 0);
+        assert(y >= 0 && y < rows_pr && x >= 0 && x < collums_pr && v < velocities  && v >= 0);
 
-        return data[i*collums_pr*velocities + j*velocities + v ];
+        return data[y*collums_pr*velocities + x*velocities + v ];
     }
     
 
